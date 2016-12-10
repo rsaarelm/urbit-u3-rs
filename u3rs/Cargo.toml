@@ -1,0 +1,13 @@
+[package]
+name = "u3rs"
+version = "0.1.0"
+authors = ["Risto Saarelma <risto.saarelma@iki.fi>"]
+description = "A C API to the Rust Urbit library"
+repository = "https://github.com/rsaarelm/urbit-rs"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["staticlib", "cdylib"]
+
+[dependencies]
+urbit = { path = ".." }
