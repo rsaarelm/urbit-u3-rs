@@ -7,6 +7,3 @@ repository = "https://github.com/rsaarelm/urbit-rs"
 license = "MIT OR Apache-2.0"
 
 [lib]
-crate-type = ["staticlib"]
-
-[dependencies]

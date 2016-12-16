@@ -7,7 +7,8 @@ repository = "https://github.com/rsaarelm/urbit-rs"
 license = "MIT OR Apache-2.0"
 
 [lib]
-crate-type = ["staticlib", "cdylib"]
+crate-type = ["staticlib"]
 
 [dependencies]
 urbit = { path = ".." }
+u3-alloc = { path = "../u3-alloc" }
