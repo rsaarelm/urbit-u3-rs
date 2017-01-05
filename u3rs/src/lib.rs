@@ -1,9 +1,15 @@
+use std::ops;
 use std::slice;
 
 extern crate u3_alloc;
 
 extern {
-    //static U3_OS_LoomBase: *const u32;
+    // TODO: Write in Rust
+    fn u3i_words(count: u32, data: *const u32) -> u32;
+
+    // TODO: This is the old C func as fallback while I'm not handling all the cases.
+    // Remove it completely when I've got everything covered.
+    fn u3qa_add_orig(a: Atom, b: Atom) -> Atom;
 }
 
 
@@ -16,6 +22,7 @@ fn loom_addr(noun: u32) -> *const u32 {
     (U3_OS_LOOM_BASE + (noun & NOUN_ADDR_MASK)) as *const u32
 }
 
+/// Rust wrapper for any noun value in the u3 loom.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Noun(u32);
@@ -38,12 +45,14 @@ impl Noun {
     }
 }
 
-
+/// Rust wrapper for value in the u3 loom that's known to be an atom.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Atom(u32);
 
 impl Atom {
+    pub fn as_noun(&self) -> Noun { Noun(self.0) }
+
     pub fn as_direct(&self) -> Option<u32> {
         if self.0 >> 31 == 0 {
             Some(self.0)
@@ -67,11 +76,32 @@ impl Atom {
     }
 }
 
+impl ops::Add for Atom {
+    type Output = Atom;
+
+    fn add(self, other: Atom) -> Atom {
+        if let (Some(a), Some(b)) = (self.as_direct(), other.as_direct()) {
+            let sum = a + b;
+            if sum >> 31 != 0 {
+                // TODO: Handle overflow.
+                unsafe { u3qa_add_orig(self, other) }
+            } else {
+                Atom(sum)
+            }
+        } else {
+            unsafe { u3qa_add_orig(self, other) }
+        }
+    }
+}
+
+/// Rust wrapper for value in the u3 loom that's known to be a cell.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct Cell(u32);
 
 impl Cell {
+    pub fn as_noun(&self) -> Noun { Noun(self.0) }
+
     pub fn hed(&self) -> Noun {
         let addr = loom_addr(self.0) as *const Noun;
         unsafe {
@@ -88,23 +118,7 @@ impl Cell {
 }
 
 
-// TODO: FFI type conventions story.
-type c_u3_atom = u32;
-type c_u3_noun = u32;
-
 #[no_mangle]
-pub extern fn u3qa_add(a: Noun, b: Noun) -> Noun {
-    if let (Some(a), Some(b)) = (a.as_atom(), b.as_atom()) {
-        if let (Some(a), Some(b)) = (a.as_direct(), b.as_direct()) {
-            let sum = a + b;
-            // TODO: Handle overflow.
-            assert!(sum & (1<<31) == 0);
-            return Noun(sum);
-        } else {
-            unimplemented!();
-        }
-    } else {
-        // TODO: Figure out u3 error handling conventions
-        panic!("Trying to add a cell");
-    }
+pub extern fn u3qa_add(a: Atom, b: Atom) -> Noun {
+    (a + b).as_noun()
 }
