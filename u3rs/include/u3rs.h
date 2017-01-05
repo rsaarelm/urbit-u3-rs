@@ -1,6 +1,6 @@
 #ifndef _U3RS_H
 #define _U3RS_H
 
-void hello(int x);
+u3_noun u3qa_add(u3_atom, u3_atom);
 
 #endif
