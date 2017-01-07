@@ -3,7 +3,7 @@ name = "u3-alloc"
 version = "0.1.0"
 authors = ["Risto Saarelma <risto.saarelma@iki.fi>"]
 description = "Heap allocator for jet code for Urbit u3 interpreter"
-repository = "https://github.com/rsaarelm/urbit-rs"
+repository = "https://github.com/rsaarelm/urbit-u3-rs"
 license = "MIT OR Apache-2.0"
 
 [lib]
