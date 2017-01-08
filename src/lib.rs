@@ -2,6 +2,7 @@ use std::ops;
 use std::slice;
 
 extern crate libc;
+extern crate gmp;
 extern crate u3_alloc;
 
 type c3_w = libc::uint32_t;
