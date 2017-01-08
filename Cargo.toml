@@ -10,4 +10,5 @@ license = "MIT OR Apache-2.0"
 crate-type = ["staticlib"]
 
 [dependencies]
+libc = "0.2"
 u3-alloc = { path = "u3-alloc" }

@@ -1,7 +1,13 @@
 use std::ops;
 use std::slice;
 
+extern crate libc;
 extern crate u3_alloc;
+
+type c3_w = libc::uint32_t;
+type u3_noun = c3_w;
+type u3_atom = u3_noun;
+type u3_cell = u3_noun;
 
 extern {
     // TODO: Write in Rust
@@ -9,7 +15,7 @@ extern {
 
     // TODO: This is the old C func as fallback while I'm not handling all the cases.
     // Remove it completely when I've got everything covered.
-    fn u3qa_add_orig(a: Atom, b: Atom) -> Atom;
+    fn u3qa_add_orig(a: u3_atom, b: u3_atom) -> Atom;
 }
 
 
@@ -25,7 +31,7 @@ fn loom_addr(noun: u32) -> *const u32 {
 /// Rust wrapper for any noun value in the u3 loom.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(C)]
-pub struct Noun(u32);
+pub struct Noun(u3_noun);
 
 impl Noun {
     pub fn as_atom(&self) -> Option<Atom> {
@@ -48,7 +54,7 @@ impl Noun {
 /// Rust wrapper for value in the u3 loom that's known to be an atom.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(C)]
-pub struct Atom(u32);
+pub struct Atom(u3_atom);
 
 impl Atom {
     pub fn as_noun(&self) -> Noun { Noun(self.0) }
@@ -84,12 +90,12 @@ impl ops::Add for Atom {
             let sum = a + b;
             if sum >> 31 != 0 {
                 // TODO: Handle overflow.
-                unsafe { u3qa_add_orig(self, other) }
+                unsafe { u3qa_add_orig(self.0, other.0) }
             } else {
                 Atom(sum)
             }
         } else {
-            unsafe { u3qa_add_orig(self, other) }
+            unsafe { u3qa_add_orig(self.0, other.0) }
         }
     }
 }
@@ -97,7 +103,7 @@ impl ops::Add for Atom {
 /// Rust wrapper for value in the u3 loom that's known to be a cell.
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[repr(C)]
-pub struct Cell(u32);
+pub struct Cell(u3_cell);
 
 impl Cell {
     pub fn as_noun(&self) -> Noun { Noun(self.0) }
@@ -119,6 +125,7 @@ impl Cell {
 
 
 #[no_mangle]
-pub extern fn u3qa_add(a: Atom, b: Atom) -> Noun {
+pub extern fn u3qa_add(a: u3_atom, b: u3_atom) -> Noun {
+    let (a, b) = (Atom(a), Atom(b));
     (a + b).as_noun()
 }
