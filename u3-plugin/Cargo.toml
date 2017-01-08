@@ -1,0 +1,10 @@
+[package]
+name = "u3-plugin"
+version = "0.1.0"
+authors = ["Risto Saarelma <risto.saarelma@iki.fi>"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["dylib"]
+
+[dependencies]
