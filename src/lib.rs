@@ -4,15 +4,22 @@ use std::ops;
 use std::slice;
 use std::mem;
 use gmp::mpz::{Mpz, mpz_struct};
+use u3_types::*;
 
 extern crate libc;
 extern crate gmp;
 extern crate u3_alloc;
 
-type c3_w = libc::uint32_t;
-type u3_noun = c3_w;
-type u3_atom = u3_noun;
-type u3_cell = u3_noun;
+pub mod jets;
+
+pub mod u3_types {
+    use libc;
+
+    pub type c3_w = libc::uint32_t;
+    pub type u3_noun = c3_w;
+    pub type u3_atom = u3_noun;
+    pub type u3_cell = u3_noun;
+}
 
 extern {
     /// Copy count of words into a new atom.
@@ -153,11 +160,4 @@ impl Cell {
             *addr.offset(2)
         }
     }
-}
-
-
-#[no_mangle]
-pub extern fn u3qa_add(a: u3_atom, b: u3_atom) -> u3_noun {
-    let (a, b) = (Atom(a), Atom(b));
-    (a + b).0
 }
