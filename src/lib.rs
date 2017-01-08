@@ -11,8 +11,17 @@ type u3_atom = u3_noun;
 type u3_cell = u3_noun;
 
 extern {
-    // TODO: Write in Rust
-    fn u3i_words(count: u32, data: *const u32) -> u32;
+    /// Copy count of words into a new atom.
+    fn u3i_words(count: c3_w, data: *const c3_w) -> u3_noun;
+
+    /// Copy atom into GMP value.
+    fn u3r_mp(a_mp: *mut gmp::mpz_struct, b: u3_atom);
+
+    /// Gain a reference count in normal space.
+    fn u3a_gain(som: u3_noun) -> u3_noun;
+
+    /// Lose a reference count
+    fn u3a_lose(som: u3_noun);
 
     // TODO: This is the old C func as fallback while I'm not handling all the cases.
     // Remove it completely when I've got everything covered.
