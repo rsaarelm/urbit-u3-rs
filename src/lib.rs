@@ -1,5 +1,9 @@
+#![allow(non_camel_case_types)]
+
 use std::ops;
 use std::slice;
+use std::mem;
+use gmp::mpz::{Mpz, mpz_struct};
 
 extern crate libc;
 extern crate gmp;
@@ -15,17 +19,16 @@ extern {
     fn u3i_words(count: c3_w, data: *const c3_w) -> u3_noun;
 
     /// Copy atom into GMP value.
-    fn u3r_mp(a_mp: *mut gmp::mpz_struct, b: u3_atom);
+    fn u3r_mp(a_mp: *mut mpz_struct, b: u3_atom);
+
+    /// Copy GMP integer into an atom and clear it.
+    fn u3i_mp(a_mp: *const mpz_struct) -> u3_noun;
 
     /// Gain a reference count in normal space.
     fn u3a_gain(som: u3_noun) -> u3_noun;
 
     /// Lose a reference count
     fn u3a_lose(som: u3_noun);
-
-    // TODO: This is the old C func as fallback while I'm not handling all the cases.
-    // Remove it completely when I've got everything covered.
-    fn u3qa_add_orig(a: u3_atom, b: u3_atom) -> Atom;
 }
 
 
@@ -69,6 +72,14 @@ pub struct Atom(u3_atom);
 impl Atom {
     pub fn as_noun(&self) -> Noun { Noun(self.0) }
 
+    pub fn to_mpz(&self) -> Mpz {
+        unsafe {
+            let mut mp: mpz_struct = mem::uninitialized();
+            u3r_mp(&mut mp, self.0);
+            mem::transmute(mp)
+        }
+    }
+
     pub fn as_direct(&self) -> Option<u32> {
         if self.0 >> 31 == 0 {
             Some(self.0)
@@ -92,20 +103,31 @@ impl Atom {
     }
 }
 
+impl From<Mpz> for Atom {
+    fn from(mp: Mpz) -> Self {
+        unsafe {
+            let mp: mpz_struct = mem::transmute(mp);
+            Atom(u3i_mp(&mp))
+        }
+    }
+}
+
 impl ops::Add for Atom {
     type Output = Atom;
 
     fn add(self, other: Atom) -> Atom {
         if let (Some(a), Some(b)) = (self.as_direct(), other.as_direct()) {
-            let sum = a + b;
-            if sum >> 31 != 0 {
-                // TODO: Handle overflow.
-                unsafe { u3qa_add_orig(self.0, other.0) }
-            } else {
-                Atom(sum)
-            }
+            let sum = (a + b) as c3_w;
+            unsafe { Atom(u3i_words(1, &sum)) }
+        } else if self == Atom(0) {
+            // Adding zero to indirect atom, just return the other atom with its refcount
+            // incremented.
+            unsafe { u3a_gain(other.0); }
+            other
         } else {
-            unsafe { u3qa_add_orig(self.0, other.0) }
+            let mut mp = self.to_mpz();
+            mp += other.to_mpz();
+            mp.into()
         }
     }
 }
@@ -135,7 +157,7 @@ impl Cell {
 
 
 #[no_mangle]
-pub extern fn u3qa_add(a: u3_atom, b: u3_atom) -> Noun {
+pub extern fn u3qa_add(a: u3_atom, b: u3_atom) -> u3_noun {
     let (a, b) = (Atom(a), Atom(b));
-    (a + b).as_noun()
+    (a + b).0
 }
