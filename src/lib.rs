@@ -43,9 +43,9 @@ fn loom_addr(noun: u32) -> *const u32 {
     // TODO: This is from portable.h, with different defines for different platforms, the Rust-side
     // needs that too. Current one is Linux only.
     const U3_OS_LOOM_BASE: u32 = 0x36000000;
-    const NOUN_ADDR_MASK: u32 = !(1<<31) | !(1<<30);
+    const NOUN_ADDR_MASK: u32 = !(1 << 31 | 1 << 30);
 
-    (U3_OS_LOOM_BASE + (noun & NOUN_ADDR_MASK)) as *const u32
+    (U3_OS_LOOM_BASE + (noun & NOUN_ADDR_MASK) * mem::size_of::<u32>() as u32) as *const u32
 }
 
 /// Rust wrapper for any noun value in the u3 loom.
