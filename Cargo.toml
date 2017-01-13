@@ -13,3 +13,4 @@ crate-type = ["staticlib"]
 libc = "0.2"
 rust-gmp = "0.4"
 u3-alloc = { path = "u3-alloc" }
+u3-plugin = { path = "u3-plugin" }
